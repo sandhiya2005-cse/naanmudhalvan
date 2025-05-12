@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Health Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #fce4ec);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #00796b, #c2185b);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .chat-box {
+      background: #f7f7f7;
+      border-radius: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 1rem;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .chat-message {
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-msg {
+      font-weight: bold;
+      color: #00796b;
+    }
+
+    .bot-msg {
+      color: #c2185b;
+      margin-left: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      resize: none;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #00796b;
+      box-shadow: 0 0 5px rgba(0, 121, 107, 0.3);
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      background: linear-gradient(90deg, #00796b, #c2185b);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #004d40, #880e4f);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+        margin: 1rem;
+      }
+
+      .chat-box {
+        max-height: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="authContainer">
+    <h2>🩺 AI Health Chatbot</h2>
+    <div id="loginForm">
+      <h3>Login</h3>
+      <input type="text" id="loginUsername" placeholder="Username" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <input type="password" id="loginPassword" placeholder="Password" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <button onclick="loginUser()">Login</button>
+      <p style="text-align:center;font-size:0.95rem;">Don't have an account? <a href="#" onclick="showSignup()">Sign up</a></p>
+      <p id="loginError" style="color:#c2185b;text-align:center;"></p>
+    </div>
+    <div id="signupForm" style="display:none;">
+      <h3>Sign Up</h3>
+      <input type="text" id="signupUsername" placeholder="Username" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <input type="password" id="signupPassword" placeholder="Password" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <button onclick="signupUser()">Sign Up</button>
+      <p style="text-align:center;font-size:0.95rem;">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+      <p id="signupError" style="color:#c2185b;text-align:center;"></p>
+    </div>
+  </div>
+  <div class="container" id="mainContainer" style="display:none;">
+    <h2>🩺 AI Health Chatbot</h2>
+    <button onclick="logoutUser()" style="float:right;margin-top:-2.5rem;margin-bottom:1rem;background:#eee;color:#c2185b;width:auto;padding:0.3rem 1rem;font-size:0.9rem;">Logout</button>
+    <p>Describe your symptoms or ask a question</p>
+    <div class="chat-box" id="chatBox"></div>
+    <textarea id="userInput" placeholder="e.g., I have a fever and cough..." rows="3"></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <hr style="margin:2rem 0;">
+    <h3>Patient Data Entry</h3>
+    <form id="patientForm" onsubmit="addPatient(event)">
+      <input type="text" id="patientName" placeholder="Patient Name" required style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <input type="number" id="patientAge" placeholder="Age" required style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <input type="text" id="patientSymptoms" placeholder="Symptoms" required style="width:100%;padding:0.5rem;margin-bottom:0.5rem;border-radius:8px;border:1px solid #ccc;">
+      <button type="submit">Add Patient</button>
+    </form>
+    <button onclick="downloadCSV()" style="margin-top:1rem;background:#00796b;">Download Patient Data (CSV)</button>
+    <div id="patientMsg" style="color:#00796b;text-align:center;margin-top:0.5rem;"></div>
+  </div>
+
+  <script>
+    // --- Auth Logic ---
+    function showSignup() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+      document.getElementById('loginError').textContent = '';
+    }
+    function showLogin() {
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('signupError').textContent = '';
+    }
+    function signupUser() {
+      const username = document.getElementById('signupUsername').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      if (!username || !password) {
+        document.getElementById('signupError').textContent = 'Please fill all fields.';
+        return;
+      }
+      if (localStorage.getItem('user_' + username)) {
+        document.getElementById('signupError').textContent = 'Username already exists.';
+        return;
+      }
+      localStorage.setItem('user_' + username, password);
+      document.getElementById('signupError').textContent = 'Signup successful! Please login.';
+      setTimeout(showLogin, 1000);
+    }
+    function loginUser() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!username || !password) {
+        document.getElementById('loginError').textContent = 'Please fill all fields.';
+        return;
+      }
+      const stored = localStorage.getItem('user_' + username);
+      if (stored && stored === password) {
+        localStorage.setItem('currentUser', username);
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+      } else {
+        document.getElementById('loginError').textContent = 'Invalid credentials.';
+      }
+    }
+    function logoutUser() {
+      localStorage.removeItem('currentUser');
+      document.getElementById('mainContainer').style.display = 'none';
+      document.getElementById('authContainer').style.display = 'block';
+    }
+    // Auto-login if already logged in
+    window.onload = function() {
+      if (localStorage.getItem('currentUser')) {
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+      }
+    }
+    // --- Patient Data Logic ---
+    let patientData = [];
+    function addPatient(e) {
+      e.preventDefault();
+      const name = document.getElementById('patientName').value.trim();
+      const age = document.getElementById('patientAge').value.trim();
+      const symptoms = document.getElementById('patientSymptoms').value.trim();
+      if (!name || !age || !symptoms) return;
+      patientData.push({ name, age, symptoms });
+      document.getElementById('patientForm').reset();
+      document.getElementById('patientMsg').textContent = 'Patient added!';
+      setTimeout(()=>{document.getElementById('patientMsg').textContent='';}, 1200);
+    }
+    function downloadCSV() {
+      if (patientData.length === 0) {
+        alert('No patient data to download.');
+        return;
+      }
+      let csv = 'Name,Age,Symptoms\n';
+      patientData.forEach(p => {
+        csv += `${p.name},${p.age},${p.symptoms.replace(/,/g,';')}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'patient_data.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    function sendMessage() {
+      const inputElement = document.getElementById("userInput");
+      const input = inputElement.value.trim();
+      if (!input) return;
+
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML += `<div class="chat-message"><span class="user-msg">You:</span> ${input}</div>`;
+      inputElement.value = '';
+
+      const response = getBotResponse(input.toLowerCase());
+      setTimeout(() => {
+        chatBox.innerHTML += `<div class="chat-message"><span class="bot-msg">Bot:</span> ${response}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 400);
+    }
+
+    function getBotResponse(msg) {
+      if (msg.match(/fever/) && msg.match(/cough|cold|breathing/)) {
+        return "You may have a respiratory infection like the flu or COVID-19. Please rest and get tested if needed.";
+      } else if (msg.match(/headache|migraine|head pain/)) {
+        return "That sounds like a headache. Stay hydrated, and consider rest or over-the-counter relief.";
+      } else if (msg.match(/stomach|nausea|vomit|diarrhea|abdominal/)) {
+        return "Stomach issues may be due to a virus or something you ate. Stay hydrated and rest.";
+      } else if (msg.match(/covid|corona|virus/)) {
+        return "COVID-19 often includes fever, cough, fatigue, and sore throat. Take a test and follow local health guidelines.";
+      } else if (msg.match(/chest pain|tightness|pressure/)) {
+        return "Chest pain can be serious. Please seek emergency medical attention immediately.";
+      } else if (msg.match(/fatigue|tired|weak/)) {
+        return "Fatigue may be due to poor sleep, stress, or underlying illness. Rest well and drink fluids.";
+      } else if (msg.match(/skin|rash|itch|irritation/)) {
+        return "Skin irritation could be allergic or infectious. Keep it clean and avoid scratching.";
+      } else {
+        return "I'm still learning! Try describing your symptoms clearly. For emergencies, contact a healthcare provider.";
+      }
+    }
+
+    // Allow Enter key to send message
+    document.getElementById("userInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
